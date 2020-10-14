@@ -9,7 +9,7 @@ import shap  # shap interpreter
 import multiprocessing  # in order to parallelize experiments
 
 n_cores = multiprocessing.cpu_count()  # Number of cores available for the task
-n_exp = 3  # Number of experiments
+n_exp = 10  # Number of experiments
 n_train = 100  # Number of points in the training set for each experiment
 n_test = int(0.1 * n_train)  # Number of points in the test set for each experiment
 dim_X = 3  # Dimension of the input space
