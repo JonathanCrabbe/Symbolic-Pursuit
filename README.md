@@ -4,7 +4,7 @@
  
 ## Usage
 
- See the 3 enclosed notebooks
+ See the 3 enclosed notebooks.
 
 ## Dependencies
 
