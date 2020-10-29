@@ -65,10 +65,11 @@ if __name__ == '__main__':
     X_train, y_train, X_test, y_test = data_loader(dataset_name, random_seed=random_seed, test_ratio=test_ratio)
     X_mixup = mixup(X_train, random_seed=random_seed)
     if model is None:
-        model = train_model(X_train, y_train, black_box=model_type)
+        model = train_model(X_train, y_train, black_box=model_type, random_seed=random_seed)
     else:
         model_type = model.__class__.__name__
-    symbolic_model = SymbolicRegressor()
+    symbolic_model = SymbolicRegressor(verbosity=verbosity, loss_tol=loss_tol, ratio_tol=ratio_tol,
+                                       maxiter=maxiter, eps=eps, random_seed=random_seed)
     symbolic_model.fit(model.predict, X_mixup)
 
     # Compute the metrics
