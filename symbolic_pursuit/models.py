@@ -1,23 +1,11 @@
 from pysymbolic.models.special_functions import MeijerG
 from scipy.optimize import minimize
 from sympy import Symbol, sympify
-from sklearn.metrics import log_loss
 import mpmath
-import sympy
 import numpy as np
 
 
 # Hyperparameters related functions:
-
-def load_hyperparameters():
-    hyperparameters = {
-        'loss_tol': 1.0e-3,  # Loss tolerance
-        'ratio_tol': 0.9,  # Tolerance for the ratio
-        'maxiter': 100,  # Maximal number of iterations for the optimizer
-        'eps': 1.0e-5  # Small number for numerical stability
-    }
-    return hyperparameters
-
 
 def load_h():
     h = {
@@ -65,13 +53,20 @@ class SymbolicRegressor:
 
     # Adaptation of existing methods:
 
-    def __init__(self, verbosity=True):
+    def __init__(self, verbosity=True, loss_tol=1.0e-3, ratio_tol=0.9, maxiter=100,
+                 eps=1.0e-5, random_seed=42):
         self.terms_list = []  # List of all the terms in the model
         self.loss_list = []  # List of residual losses associated to each term
         self.n_points = 0  # Number of points
         self.current_resi = np.array(self.n_points)  # Array of residues
         self.dim_x = 0  # Number of features
         self.verbosity = verbosity  # True if the optimization process should be detailed
+        self.loss_tol = loss_tol  # The tolerance for the loss under which the pursuit stops
+        self.ratio_tol = ratio_tol  # A new term is added only if new_loss / old_loss < ratio_tol
+        self.maxiter = maxiter  # Maximum number of iterations for optimization
+        self.eps = eps  # Small number used for numerical stability
+        self.random_seed = random_seed  # Random seed for reproducibility
+
 
     def __str__(self):
         expression = ""
@@ -83,7 +78,7 @@ class SymbolicRegressor:
     def optimize_CG(self, loss, theta_0):
         # Encodes the parameters of the optimal parameters of an additional term inside theta_opt
         opt = minimize(loss, theta_0, method='CG',
-                       options={'disp': self.verbosity, 'maxiter': load_hyperparameters()['maxiter']})
+                       options={'disp': self.verbosity, 'maxiter': self.maxiter})
         theta_opt = opt.x
         loss_ = opt.fun
         return theta_opt, loss_
@@ -158,7 +153,7 @@ class SymbolicRegressor:
 
     def get_feature_importance(self, x0):
         # Returns the feature importance for a prediction at x0
-        importance_list = [load_hyperparameters()['eps'] for _ in range(self.dim_x)]
+        importance_list = [self.eps for _ in range(self.dim_x)]
         for k in range(len(self.terms_list)):
             g_k, v_k, w_k = self.terms_list[k]
             x_k = np.dot(v_k, x0) / (np.sqrt(self.dim_x) * np.linalg.norm(v_k))
@@ -204,7 +199,7 @@ class SymbolicRegressor:
         self.dim_x = len(X[0])
         self.n_points = len(X)
         h_dic = load_h()
-        loss_tol = load_hyperparameters()['loss_tol']
+        loss_tol = self.loss_tol
         w0 = 1.0
         count = 0
         Y_target = f(X)
@@ -214,6 +209,7 @@ class SymbolicRegressor:
             count += 1
             new_loss_list = []
             new_terms_list = []
+            np.random.seed(self.random_seed)
             v0 = np.random.randn(self.dim_x)
             self.current_resi = Y_target - self.predict(X)
             if self.verbosity:
@@ -235,7 +231,7 @@ class SymbolicRegressor:
             best_index = np.argmin(np.array(new_loss_list))
             best_term = new_terms_list[int(best_index)]
             best_loss = new_loss_list[int(best_index)]
-            if best_loss / current_loss < load_hyperparameters()['ratio_tol']:
+            if best_loss / current_loss < self.ratio_tol:
                 self.terms_list.append(best_term)
                 self.loss_list.append(best_loss)
                 if self.verbosity:
@@ -281,6 +277,3 @@ class SymbolicRegressor:
         if self.verbosity:
             print(100 * "=")
             print("Backfitting complete.")
-
-
-

@@ -116,3 +116,4 @@ with open('synthetic_feature_importance.txt', 'a') as f:
     f.write('LIME MSE 2 : ' + str(lime_score2) + ' +/- ' + str(lime_std2) + '\n')
     f.write('SHAP MSE 2: ' + str(shap_score2) + ' +/- ' + str(shap_std2) + '\n')
     f.write('Symbolic MSE 2 : ' + str(symbolic_score2) + ' +/- ' + str(symbolic_std2) + '\n')
+
