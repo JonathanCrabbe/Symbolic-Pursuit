@@ -66,6 +66,10 @@ class SymbolicRegressor:
         self.maxiter = maxiter  # Maximum number of iterations for optimization
         self.eps = eps  # Small number used for numerical stability
         self.random_seed = random_seed  # Random seed for reproducibility
+        if self.verbosity:
+            print('Model created with the following hyperparameters :'
+                  + '\n loss_tol={} \n ratio_tol={} '
+                    '\n maxiter={} \n eps={} \n random_seed={}'.format(loss_tol, ratio_tol, maxiter, eps, random_seed))
 
 
     def __str__(self):

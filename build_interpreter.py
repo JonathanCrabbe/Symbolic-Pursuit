@@ -37,7 +37,7 @@ def init_arg():
         '--eps', default=1.0e-5, type=float, help='small number used for numerical stability'
     )
     parser.add_argument(
-        '--random_seed', type=int, help='random seed for reproducibility'
+        '--random_seed', type=int, default=42, help='random seed for reproducibility'
     )
     return parser.parse_args()
 
@@ -58,7 +58,8 @@ if __name__ == '__main__':
     eps = args.eps
     random_seed = args.random_seed
     print("\nWelcome to this experiment evaluating the performance of symbolic modeling. \n"
-          + "This experiment uses the black-box {} on the dataset {}. \n".format(model_type, dataset_name))
+          + "This experiment uses the black-box {} on the dataset {}. \n".format(model_type, dataset_name)
+          + "The ratio of test examples is test_ratio={}. \n".format(test_ratio))
 
     # Train the model (if no model is given) and the symbolic model
 
