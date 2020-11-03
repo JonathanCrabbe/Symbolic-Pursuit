@@ -31,7 +31,7 @@ def init_arg():
         '--ratio_tol', default=0.9, type=float, help='a new term is added only if new_loss / old_loss < ratio_tol'
     )
     parser.add_argument(
-        '--maxiter', default=300, type=int, help='maximum number of iterations for optimization'
+        '--maxiter', default=100, type=int, help='maximum number of iterations for optimization'
     )
     parser.add_argument(
         '--eps', default=1.0e-5, type=float, help='small number used for numerical stability'
