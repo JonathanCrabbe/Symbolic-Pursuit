@@ -42,4 +42,7 @@ python3 build_interpreter --dataset wine-quality-red --model_type MLP --random_s
 | sympy | 1.6.2 |
 | xgboost | 1.2.1 |
 
+## References
+
+In our experiments, we used implementations of [LIME](https://github.com/marcotcr/lime), [SHAP](https://github.com/slundberg/shap) and [pysymbolic](https://github.com/ahmedmalaa/Symbolic-Metamodeling)
 
