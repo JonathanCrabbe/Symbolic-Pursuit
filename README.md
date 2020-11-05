@@ -24,9 +24,9 @@ python3 build_interpreter --dataset wine-quality-red --model_type MLP --random_s
  
  For more details on how to use the module in general, see the 3 enclosed notebooks.
  
- [1.Building a Symbolic Regressor](./1.%20Building%20a%20Symbolic%20Regressor.ipynb)  
- [2.Symbolic Pursuit vs LIME](./2.%20Symbolic%20Pursuit%20vs%20LIME.ipynb)  
- [3.Synthetic experiments with Symbolic Pursuit](./3.%20Synthetic%20experiments%20with%20Symbolic%20Pursuit.ipynb)
+ [1. Building a Symbolic Regressor](./1.%20Building%20a%20Symbolic%20Regressor.ipynb)  
+ [2. Symbolic Pursuit vs LIME](./2.%20Symbolic%20Pursuit%20vs%20LIME.ipynb)  
+ [3. Synthetic experiments with Symbolic Pursuit](./3.%20Synthetic%20experiments%20with%20Symbolic%20Pursuit.ipynb)
 
 ## Dependencies
 
