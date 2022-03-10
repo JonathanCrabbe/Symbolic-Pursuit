@@ -1,18 +1,35 @@
 import numpy as np
-from datasets import datasets
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+
+from datasets import datasets
 
 
 def data_loader(dataset_name, random_seed=42, fix=False, test_ratio=0.2):
-    if dataset_name in ["bostonHousing", "energy", "wine-quality-red", "yacht", "meps_19", "meps_20", "meps_21", "star",
-                        "facebook_1", "facebook_2", "bio", 'blog_data', "concrete", "bike", "community"]:
+    if dataset_name in [
+        "bostonHousing",
+        "energy",
+        "wine-quality-red",
+        "yacht",
+        "meps_19",
+        "meps_20",
+        "meps_21",
+        "star",
+        "facebook_1",
+        "facebook_2",
+        "bio",
+        "blog_data",
+        "concrete",
+        "bike",
+        "community",
+    ]:
 
-
-        X, y = datasets.GetDataset(dataset_name, base_path='datasets/')
+        X, y = datasets.GetDataset(dataset_name, base_path="datasets/")
 
         # Dataset is divided into test and train data based on test_ratio parameter
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_ratio, random_state=random_seed)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_ratio, random_state=random_seed
+        )
         X_train = np.asarray(X_train)
         y_train = np.asarray(y_train)
         X_test = np.asarray(X_test)
@@ -37,7 +54,7 @@ def data_loader(dataset_name, random_seed=42, fix=False, test_ratio=0.2):
         return X_train, y_train, X_test, y_test
 
     else:
-        raise AssertionError('Error: wrong data name')
+        raise AssertionError("Error: wrong data name")
 
 
 def mixup(X_train, random_seed=42):
@@ -48,5 +65,5 @@ def mixup(X_train, random_seed=42):
     id2 = np.random.randint(0, len(X_train), size=size_mix)
     np.random.seed(random_seed)
     lam = np.random.beta(0.2, 0.2, size=(size_mix, 1))
-    X_mix = lam*X_train[id1] + (1-lam)*X_train[id2]
+    X_mix = lam * X_train[id1] + (1 - lam) * X_train[id2]
     return X_mix

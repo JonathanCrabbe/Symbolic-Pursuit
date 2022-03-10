@@ -1,9 +1,9 @@
-from xgboost import XGBRegressor
-from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
+from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBRegressor
 
 
 def train_model(X_train, y_train, black_box="MLP", random_seed=42):
@@ -15,7 +15,7 @@ def train_model(X_train, y_train, black_box="MLP", random_seed=42):
     elif black_box == "SVM":
         model = SVR(random_state=random_seed)
     elif black_box == "XGB":
-        model = XGBRegressor(objective='reg:squarederror', random_state=random_seed)
+        model = XGBRegressor(objective="reg:squarederror", random_state=random_seed)
     elif black_box == "Tree":
         model = DecisionTreeRegressor(random_state=random_seed)
     elif black_box == "RF":

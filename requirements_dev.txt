@@ -1,0 +1,13 @@
+-r ./requirements.txt
+
+bandit
+black
+catboost
+cite2c==0.2.1
+flake8
+jupyter
+lime==0.2.0.1
+pre-commit
+pytest
+sklearn
+xgboost

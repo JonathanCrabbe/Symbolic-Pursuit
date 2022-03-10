@@ -1,16 +1,20 @@
+import csv
+import multiprocessing  # in order to parallelize experiments
 import os
 import sys
-import csv
-import numpy as np  # we use numpy to deal with arrays
+
 import lime.lime_tabular  # lime interpreter
+import numpy as np  # we use numpy to deal with arrays
 import shap  # shap interpreter
-import multiprocessing  # in order to parallelize experiments
-sys.path.append(os.path.abspath('..'))
-from symbolic_pursuit.models import SymbolicRegressor  # our symbolic model class
-from sklearn.metrics import mean_squared_error  # mse
+
+sys.path.append(os.path.abspath(".."))
+from datetime import datetime  # the time to write the logs
+
 from joblib import Parallel, delayed  # in order to parallelize experiments
 from numpy.linalg import norm  # vector and matrices norms
-from datetime import datetime  # the time to write the logs
+from sklearn.metrics import mean_squared_error  # mse
+
+from symbolic_pursuit.models import SymbolicRegressor  # our symbolic model class
 
 n_cores = multiprocessing.cpu_count()  # Number of cores available for the task
 n_exp = 50  # Number of experiments
@@ -26,7 +30,7 @@ def order_weights_LIME(exp_list):
     # Order the weights outputted by LIME
     ordered_weights = [0 for _ in range(dim_X)]
     for tup in exp_list:
-        feature_id = int(tup[0].split('x_')[1][0])
+        feature_id = int(tup[0].split("x_")[1][0])
         ordered_weights[feature_id - 1] = tup[1]
     return ordered_weights
 
@@ -46,11 +50,13 @@ def run_experiment():
 
     # LIME explainer
     lime_weight_list = []
-    lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train,
-                                                            feature_names=["x_" + str(k) for k in range(1, dim_X + 1)],
-                                                            class_names=['f'],
-                                                            verbose=True,
-                                                            mode='regression')
+    lime_explainer = lime.lime_tabular.LimeTabularExplainer(
+        X_train,
+        feature_names=["x_" + str(k) for k in range(1, dim_X + 1)],
+        class_names=["f"],
+        verbose=True,
+        mode="regression",
+    )
     for k in range(n_test):
         exp = lime_explainer.explain_instance(X_test[k], f, num_features=dim_X)
         lime_weight_list.append(order_weights_LIME(exp.as_list()))
@@ -76,19 +82,39 @@ def run_experiment():
     for k in range(n_test):
         symbolic_weight_list.append(symbolic_model.get_feature_importance(X_test[k]))
     symbolic_weight_list = np.array(symbolic_weight_list, dtype=float)
-    symbolic_weight_list = symbolic_weight_list / norm(symbolic_weight_list, axis=1)[:, None]
+    symbolic_weight_list = (
+        symbolic_weight_list / norm(symbolic_weight_list, axis=1)[:, None]
+    )
     symbolic_weight_avg = symbolic_weight_list.mean(axis=0)
     symbolic_error = mean_squared_error(true_weight_list, symbolic_weight_list)
     symbolic_error2 = mean_squared_error(symbolic_weight_avg, importance_true)
     # Add the entry inside a CSV
-    with open('synthetic_results.csv', 'a', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile, delimiter=' ')
-        csv_writer.writerow([lime_error, shap_error, symbolic_error, lime_error2, shap_error2, symbolic_error2])
-    return [lime_error, shap_error, symbolic_error, lime_error2, shap_error2, symbolic_error2]
+    with open("synthetic_results.csv", "a", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile, delimiter=" ")
+        csv_writer.writerow(
+            [
+                lime_error,
+                shap_error,
+                symbolic_error,
+                lime_error2,
+                shap_error2,
+                symbolic_error2,
+            ]
+        )
+    return [
+        lime_error,
+        shap_error,
+        symbolic_error,
+        lime_error2,
+        shap_error2,
+        symbolic_error2,
+    ]
 
 
 # Run experiments in parallel
-error_list = Parallel(n_jobs=n_cores, verbose=50)(delayed(run_experiment)() for _ in range(n_exp))
+error_list = Parallel(n_jobs=n_cores, verbose=50)(
+    delayed(run_experiment)() for _ in range(n_exp)
+)
 error_list = np.array(error_list)
 
 # Extracts mses, do stats
@@ -107,13 +133,16 @@ shap_score2, shap_std2 = shap_mse2.mean(), shap_mse2.std()
 symbolic_score2, symbolic_std2 = symbolic_mse2.mean(), symbolic_mse2.std()
 
 # Write everything in a text file
-with open('synthetic_feature_importance.txt', 'a') as f:
+with open("synthetic_feature_importance.txt", "a") as f:
     now_str = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-    f.write(100 * '-' + '\n' + 'Experiment ' + now_str + '\n' + 100 * '-' + '\n')
-    f.write('LIME MSE 1 : ' + str(lime_score) + ' +/- ' + str(lime_std) + '\n')
-    f.write('SHAP MSE 1 : ' + str(shap_score) + ' +/- ' + str(shap_std) + '\n')
-    f.write('Symbolic MSE 1 : ' + str(symbolic_score) + ' +/- ' + str(symbolic_std) + '\n')
-    f.write('LIME MSE 2 : ' + str(lime_score2) + ' +/- ' + str(lime_std2) + '\n')
-    f.write('SHAP MSE 2: ' + str(shap_score2) + ' +/- ' + str(shap_std2) + '\n')
-    f.write('Symbolic MSE 2 : ' + str(symbolic_score2) + ' +/- ' + str(symbolic_std2) + '\n')
-
+    f.write(100 * "-" + "\n" + "Experiment " + now_str + "\n" + 100 * "-" + "\n")
+    f.write("LIME MSE 1 : " + str(lime_score) + " +/- " + str(lime_std) + "\n")
+    f.write("SHAP MSE 1 : " + str(shap_score) + " +/- " + str(shap_std) + "\n")
+    f.write(
+        "Symbolic MSE 1 : " + str(symbolic_score) + " +/- " + str(symbolic_std) + "\n"
+    )
+    f.write("LIME MSE 2 : " + str(lime_score2) + " +/- " + str(lime_std2) + "\n")
+    f.write("SHAP MSE 2: " + str(shap_score2) + " +/- " + str(shap_std2) + "\n")
+    f.write(
+        "Symbolic MSE 2 : " + str(symbolic_score2) + " +/- " + str(symbolic_std2) + "\n"
+    )
