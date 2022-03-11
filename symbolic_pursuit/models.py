@@ -53,6 +53,8 @@ class SymbolicRegressor:
         eps=1.0e-5,
         random_seed=42,
         baselines=list(load_h().keys()),
+        task_type="regression",
+        patience: int = 10,
     ):
         self.terms_list = []  # List of all the terms in the model
         self.loss_list = []  # List of residual losses associated to each term
@@ -69,6 +71,8 @@ class SymbolicRegressor:
         self.eps = eps  # Small number used for numerical stability
         self.random_seed = random_seed  # Random seed for reproducibility
         self.baselines = baselines
+        self.task_type = task_type
+        self.patience = patience
 
         log.info(
             "Model created with the following hyperparameters :"
@@ -97,6 +101,22 @@ class SymbolicRegressor:
         loss_ = opt.fun
         return theta_opt, loss_
 
+    def _get_nonlin(self):
+        if self.task_type == "regression":
+            return ReLU
+        elif self.task_type == "classification":
+            return sigmoid
+        else:
+            raise RuntimeError(f"Unuspported task type {self.task_type}")
+
+    def _get_nonlin_name(self) -> str:
+        if self.task_type == "regression":
+            return "ReLU"
+        elif self.task_type == "classification":
+            return "Sigmoid"
+        else:
+            raise RuntimeError(f"Unuspported task type {self.task_type}")
+
     # Extract information from the model
 
     def predict(self, X, exclude_term=False, exclusion_id=0):
@@ -108,7 +128,8 @@ class SymbolicRegressor:
         for k in index_list:
             meijer_g, v, w = self.terms_list[k]
             result = result + w * meijer_g.evaluate(
-                ReLU(np.matmul(X, v)) / (np.sqrt(self.dim_x) * np.linalg.norm(v))
+                self._get_nonlin()(np.matmul(X, v))
+                / (np.sqrt(self.dim_x) * np.linalg.norm(v))
             )
         return result
 
@@ -117,7 +138,7 @@ class SymbolicRegressor:
         expression = 0
         for k in range(len(self.terms_list)):
             meijer_gk, _, w_k = self.terms_list[k]
-            argument_str = "[ReLU(P" + str(k + 1) + ")]"
+            argument_str = f"[{self._get_nonlin_name()}(P{k + 1})]"
             argument_symbol = Symbol(argument_str)
             expression += w_k * meijer_gk.expression(x=argument_symbol)
         return expression
@@ -143,9 +164,7 @@ class SymbolicRegressor:
 
     def print_projections(self):
         # Prints the projections appearing in the symbolic expression
-        proj_list = self.get_projections()
-        for k in range(len(proj_list)):
-            print(f"P{str(k + 1)} = {proj_list[k]}")
+        print(self.string_projections())
 
     def get_taylor(self, x0, approx_order):
         # Returns the Taylor expansion around x0 of order approx_order for our model
@@ -172,6 +191,8 @@ class SymbolicRegressor:
 
     def get_feature_importance(self, x0):
         # Returns the feature importance for a prediction at x0
+        x0 = np.asarray(x0)
+
         importance_list = [self.eps for _ in range(self.dim_x)]
         for k in range(len(self.terms_list)):
             g_k, v_k, w_k = self.terms_list[k]
@@ -206,7 +227,9 @@ class SymbolicRegressor:
             theta_g, v_, w_ = split_theta(theta)
             meijer_g_ = MeijerG(theta=theta_g, order=g_order)
             Y = w_ * meijer_g_.evaluate(
-                ReLU(np.matmul(X, v_) / (np.sqrt(self.dim_x) * np.linalg.norm(v_)))
+                self._get_nonlin()(
+                    np.matmul(X, v_) / (np.sqrt(self.dim_x) * np.linalg.norm(v_))
+                )
             )
 
             loss_ = np.mean((Y - residual_list) ** 2)
@@ -215,20 +238,25 @@ class SymbolicRegressor:
         new_theta, new_loss = self.optimize_CG(loss, theta_0)
         new_theta_meijer, new_v, new_w = split_theta(new_theta)
         new_meijerg = MeijerG(theta=new_theta_meijer, order=g_order)
-        return new_meijerg, new_v, new_w, new_loss
+        return new_meijerg, new_v.squeeze(), new_w, new_loss
 
     def fit(self, f, X):
         # Fits a model for f via a projection pursuit strategy
+        X = np.asarray(X)
+
         self.dim_x = len(X[0])
         self.n_points = len(X)
         h_dic = load_h()
         loss_tol = self.loss_tol
         w0 = 1.0
         count = 0
-        Y_target = f(X)
+
+        Y_target = np.asarray(f(X)).squeeze()
+
         current_loss = np.mean(Y_target ** 2)
+
         self.loss_list.append(current_loss)
-        while current_loss > loss_tol:
+        while current_loss > loss_tol and count < self.patience:
             count += 1
             new_loss_list = []
             new_terms_list = []
@@ -284,7 +312,7 @@ class SymbolicRegressor:
         log.info("The final model has the following expression:")
         log.info(self)
 
-        self.print_projections()
+        log.info(self.string_projections())
 
         log.info(f"The number of terms inside the expansion is {len(self.terms_list)}.")
         log.info(f"The current loss is {self.loss_list[-1]}.")
@@ -296,7 +324,9 @@ class SymbolicRegressor:
             log.info(100 * "=")
             log.info(f"Now backfitting term number {k + 1}.")
 
-            self.current_resi = f(X) - self.predict(
+            target = np.asarray(f(X)).squeeze()
+
+            self.current_resi = target - self.predict(
                 X, exclude_term=True, exclusion_id=k
             )
             meijer_g0, v0, w0 = self.terms_list[k]
