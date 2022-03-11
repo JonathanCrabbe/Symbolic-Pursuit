@@ -2,7 +2,17 @@
 
  Github for the NIPS 2020 paper "Learning outside the black-box: at the pursuit of interpretable models"
 
-## Usage
+## Installation
+
+```
+pip install .
+```
+For tests/experiments, also install
+```
+pip install -r requirements_dev.txt
+```
+
+## Example Usage
 
 To build a symbolic regressor for a given dataset and a given model (or a given model type),
 the following command can be used :
@@ -28,19 +38,6 @@ python3 build_interpreter --dataset wine-quality-red --model_type MLP --random_s
  [2. Symbolic Pursuit vs LIME](./2.%20Symbolic%20Pursuit%20vs%20LIME.ipynb)
  [3. Synthetic experiments with Symbolic Pursuit](./3.%20Synthetic%20experiments%20with%20Symbolic%20Pursuit.ipynb)
 
-## Dependencies
-
-| Name     	| Version  	|
-|---	|---	|
-| cite2c | 0.2.1 |
-| joblib | 0.17.0 |
-| jupyter | 1.0.0 |
-| lime | 0.2.0.1 |
-| numpy | 1.19.1 |
-| python | 3.7.9 |
-| scikit-learn | 0.23.2 |
-| sympy | 1.6.2 |
-| xgboost | 1.2.1 |
 
 ## References
 
