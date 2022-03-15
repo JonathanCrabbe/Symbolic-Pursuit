@@ -240,9 +240,9 @@ class SymbolicRegressor:
         new_meijerg = MeijerG(theta=new_theta_meijer, order=g_order)
         return new_meijerg, new_v.squeeze(), new_w, new_loss
 
-    def fit(self, f, X):
+    def fit(self, f, X_raw):
         # Fits a model for f via a projection pursuit strategy
-        X = np.asarray(X)
+        X = np.asarray(X_raw)
 
         self.dim_x = len(X[0])
         self.n_points = len(X)
@@ -251,7 +251,7 @@ class SymbolicRegressor:
         w0 = 1.0
         count = 0
 
-        Y_target = np.asarray(f(X)).squeeze()
+        Y_target = np.asarray(f(X_raw)).squeeze()
 
         current_loss = np.mean(Y_target ** 2)
 
@@ -293,7 +293,7 @@ class SymbolicRegressor:
 
                 log.info(100 * "=")
                 log.info(f"The tree number {best_index + 1} was selected as the best.")
-                self.backfit(f, X)
+                self.backfit(f, X_raw)
                 current_loss = self.loss_list[-1]
             else:
                 log.info(100 * "=")
@@ -318,13 +318,14 @@ class SymbolicRegressor:
         log.info(f"The current loss is {self.loss_list[-1]}.")
         log.info(100 * "-")
 
-    def backfit(self, f, X):
+    def backfit(self, f, X_raw):
         # The backfitting procedure invoked at each iteration of fit to correct the previous terms
+        X = np.asarray(X_raw)
         for k in range(len(self.terms_list) - 1):
             log.info(100 * "=")
             log.info(f"Now backfitting term number {k + 1}.")
 
-            target = np.asarray(f(X)).squeeze()
+            target = np.asarray(f(X_raw)).squeeze()
 
             self.current_resi = target - self.predict(
                 X, exclude_term=True, exclusion_id=k
