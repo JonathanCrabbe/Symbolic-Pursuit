@@ -253,7 +253,7 @@ class SymbolicRegressor:
 
         Y_target = np.asarray(f(X_raw)).squeeze()
 
-        current_loss = np.mean(Y_target ** 2)
+        current_loss = np.mean(Y_target**2)
 
         self.loss_list.append(current_loss)
         while current_loss > loss_tol and count < self.patience:

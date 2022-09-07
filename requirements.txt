@@ -1,4 +1,0 @@
-loguru
-numpy
-scikit-learn
-sympy==1.6.2
